@@ -11,7 +11,6 @@
         import { getFirestore, doc, setDoc, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // JOUW FIREBASE CONFIGURATIE
         const firebaseConfig = {
             apiKey: "AIzaSyBYHGmL945bVk3EOf87a25flUjdLj6Vaws",
             authDomain: "ncz-colman.firebaseapp.com",
@@ -26,23 +25,22 @@
         const db = getFirestore(app);
         const auth = getAuth(app);
         
-        // State management
         let user = null;
         let levelCount = 0;
         let userChoices = [];
 
-        // Auth init
         const initAuth = async () => {
             try {
-                await signInAnonymously(auth);
-            } catch (error) {
-                console.error("Auth error:", error);
-            }
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) { console.error("Auth error:", error); }
         };
         onAuthStateChanged(auth, (u) => { user = u; });
         initAuth();
 
-        // Game Data
         const gameData = {
             start: {
                 title: "Vraag jij je dit ook af?",
@@ -51,7 +49,7 @@
             },
             level1: {
                 title: "Het onderzoek start",
-                text: "Je merkt dat video's constant bufferen. De directie wijst naar technische problemen, maar de realiteit is vaak complexer. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Je merkt dat video's constant bufferen. De directie wijst naar technische problemen. Wil je meer weten?",
                 choices: [
                     { text: "Artikel: Besparingen in het onderwijs", type: "saai", next: "level2_saai" },
                     { text: "LEES: WI-FI STRALING VERANDERT JE DNA!", type: "clickbait", next: "level2_complot" }
@@ -59,7 +57,7 @@
             },
             level2_saai: {
                 title: "Bezuinigingsronde",
-                text: "Oude servers kunnen de smartphones niet aan. Er is geen budget voor glasvezel. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Oude servers kunnen de smartphones niet aan. Wil je meer weten?",
                 choices: [
                     { text: "Artikel: Slecht management van budgetten", type: "saai", next: "level3_saai" },
                     { text: "LEES: HET IS EEN EXPERIMENT OM ONS DOM TE HOUDEN!", type: "clickbait", next: "level3_complot" }
@@ -67,7 +65,7 @@
             },
             level2_complot: {
                 title: "Onzichtbare golven",
-                text: "Routers staan op een 'bio-frequentie' die inwerkt op je cellen en vermoeidheid veroorzaakt. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Routers staan op een 'bio-frequentie' die inwerkt op je cellen. Wil je meer weten?",
                 choices: [
                     { text: "Artikel: Gebrek aan ventilatie en focus", type: "saai", next: "level3_saai" },
                     { text: "LEES: HET IS EEN MENSELIJK EXPERIMENT VAN DE ELITE!", type: "clickbait", next: "level3_complot" }
@@ -75,7 +73,7 @@
             },
             level3_saai: {
                 title: "Bureaucratische molens",
-                text: "Aanbestedingen duren jaren; de technologie is al verouderd bij installatie. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Aanbestedingen duren jaren; de technologie is al verouderd. Wil je meer weten?",
                 choices: [
                     { text: "Artikel: Gebrekkige ICT-ondersteuning", type: "saai", next: "level4_saai" },
                     { text: "LEES: DE ROUTERS SCANNEN JE HERSENGOLVEN!", type: "clickbait", next: "level4_complot" }
@@ -83,7 +81,7 @@
             },
             level3_complot: {
                 title: "Hersen-synchronisatie",
-                text: "De trage snelheid brengt je brein in een 'alfastaat' van totale passiviteit. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "De trage snelheid brengt je brein in een 'alfastaat'. Wil je meer weten?",
                 choices: [
                     { text: "Artikel: De impact van schermtijd", type: "saai", next: "level4_saai" },
                     { text: "LEES: HET GAAT OM TOTALE GEDACHTENCONTROLE!", type: "clickbait", next: "level4_complot" }
@@ -91,7 +89,7 @@
             },
             level4_saai: {
                 title: "Economische belangen",
-                text: "Big Tech beperkt hardware om dure abonnementen af te dwingen. Winstmaximalisatie ten koste van jou. Wil je de conclusie lezen?",
+                text: "Big Tech beperkt hardware om dure abonnementen af te dwingen. Wil je de conclusie?",
                 choices: [
                     { text: "Artikel: De macht van Big Tech", type: "saai", next: "finish" },
                     { text: "LEES: DE WERELDORDE GEBRUIKT SCHOOL ALS LAB!", type: "clickbait", next: "finish" }
@@ -99,7 +97,7 @@
             },
             level4_complot: {
                 title: "DE WERELDORDE",
-                text: "De school is een testcentrum voor de Nieuwe Wereldorde. Wie niet klaagt over Wi-Fi, is gemarkeerd als gehoorzame onderdaan! Wil je de waarheid zien?",
+                text: "De school is een testcentrum voor de Nieuwe Wereldorde. Wil je de waarheid?",
                 choices: [
                     { text: "Artikel: Psychologie van de massa", type: "saai", next: "finish" },
                     { text: "LEES: ONTWAAK! BEKIJK HET GEHEIME RAPPORT!", type: "clickbait", next: "finish" }
@@ -107,7 +105,6 @@
             }
         };
 
-        // UI Functies
         window.makeChoice = async (nextStep, type) => {
             if (nextStep === 'finish') {
                 if (type !== 'start') userChoices.push(type);
@@ -125,7 +122,6 @@
             if (!user) return;
             const clickbaitCount = userChoices.filter(t => t === 'clickbait').length;
             const saaiCount = userChoices.filter(t => t === 'saai').length;
-            
             try {
                 const resultRef = doc(db, 'results', user.uid);
                 await setDoc(resultRef, {
@@ -143,16 +139,16 @@
             ui.style.opacity = '0';
             ui.style.transform = 'scale(0.1) rotate(25deg)';
             tunnel.style.display = 'block';
-            for (let i = 0; i < 25; i++) {
+            for (let i = 0; i < 20; i++) {
                 setTimeout(() => {
                     const ring = document.createElement('div');
                     ring.className = 'tunnel-ring';
                     ring.style.animation = `fall 2s linear forwards`;
                     tunnel.appendChild(ring);
                     setTimeout(() => ring.remove(), 2000);
-                }, i * 140);
+                }, i * 150);
             }
-            await new Promise(r => setTimeout(r, 3800));
+            await new Promise(r => setTimeout(r, 3500));
             tunnel.style.display = 'none';
             ui.style.opacity = '1';
             ui.style.transform = 'scale(1) rotate(0deg)';
@@ -162,7 +158,6 @@
             const step = gameData[stepKey];
             const content = document.getElementById('content');
             document.getElementById('mainBody').className = levelCount > 0 ? `rabbit-hole-level-${levelCount}` : 'bg-slate-900';
-            
             content.innerHTML = `
                 <h2 class="text-sm uppercase tracking-widest text-blue-400 mb-2 font-bold">${levelCount > 0 ? 'Level ' + levelCount + ' van 4' : 'Introductie'}</h2>
                 <h1 class="text-3xl font-bold mb-6 ${levelCount >= 3 ? 'glitch text-red-500' : ''}">${step.title}</h1>
@@ -179,23 +174,13 @@
 
         const renderResults = () => {
             const clickbaitCount = userChoices.filter(t => t === 'clickbait').length;
-            const saaiCount = userChoices.filter(t => t === 'saai').length;
             const content = document.getElementById('content');
-            
             content.innerHTML = `
                 <h1 class="text-4xl font-bold mb-4 ${clickbaitCount >= 2 ? 'text-red-500' : 'text-green-400'}">Jouw Resultaat</h1>
-                <p class="text-lg text-slate-300 mb-8">
-                    ${clickbaitCount >= 2 ? "Je bent de Rabbit Hole in gegaan! Je koos regelmatig voor de sensationele koppen." : "Je bleef bij de feiten. Je liet je niet verleiden door de schreeuwerige koppen."}
-                </p>
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="p-6 bg-slate-800 rounded-xl">
-                        <div class="text-4xl font-bold text-red-500">${clickbaitCount}/4</div>
-                        <div class="text-xs uppercase mt-2 text-slate-400 font-bold">Sensatie</div>
-                    </div>
-                    <div class="p-6 bg-slate-800 rounded-xl">
-                        <div class="text-4xl font-bold text-blue-400">${saaiCount}/4</div>
-                        <div class="text-xs uppercase mt-2 text-slate-400 font-bold">Feiten</div>
-                    </div>
+                <p class="text-lg text-slate-300 mb-8">${clickbaitCount >= 2 ? "Je bent de Rabbit Hole in gegaan!" : "Je bleef bij de feiten."}</p>
+                <div class="grid grid-cols-2 gap-4 mb-8 text-center">
+                    <div class="p-6 bg-slate-800 rounded-xl"><div class="text-4xl font-bold text-red-500">${clickbaitCount}/4</div><div class="text-xs uppercase mt-2 text-slate-400">Sensatie</div></div>
+                    <div class="p-6 bg-slate-800 rounded-xl"><div class="text-4xl font-bold text-blue-400">${4 - clickbaitCount}/4</div><div class="text-xs uppercase mt-2 text-slate-400">Feiten</div></div>
                 </div>
                 <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-full">Probeer opnieuw</button>
             `;
@@ -203,27 +188,15 @@
 
         window.openDashboard = () => {
             const pass = prompt("Voer de leraarcode in:");
-            if (pass === "1234") {
-                renderDashboard();
-            } else {
-                alert("Verkeerde code!");
-            }
+            if (pass === "1234") renderDashboard();
         };
 
         const renderDashboard = async () => {
             const content = document.getElementById('content');
-            content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-blue-400 italic">Data analyseren...</h1>`;
-            
+            content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-blue-400 italic">Data laden...</h1>`;
             try {
-                const q = query(collection(db, 'results'));
-                const snapshot = await getDocs(q);
+                const snapshot = await getDocs(collection(db, 'results'));
                 const allDocs = snapshot.docs.map(d => d.data());
-                
-                if (allDocs.length === 0) {
-                    content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-yellow-400">Geen data gevonden.</h1><button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg">Terug</button>`;
-                    return;
-                }
-
                 const oneHourAgo = Date.now() - (60 * 60 * 1000);
                 const classDocs = allDocs.filter(d => d.timestamp > oneHourAgo);
 
@@ -232,63 +205,57 @@
                     if (total === 0) return { total: 0, avg: "0.0", rabbitPerc: 0 };
                     const avg = (data.reduce((acc, curr) => acc + curr.clickbait, 0) / total).toFixed(1);
                     const rabbitCount = data.filter(d => d.clickbait >= 2).length;
-                    const rabbitPerc = Math.round((rabbitCount / total) * 100);
-                    return { total, avg, rabbitPerc };
+                    return { total, avg, rabbitPerc: Math.round((rabbitCount / total) * 100) };
                 };
 
-                const totalStats = getStats(allDocs);
-                const classStats = getStats(classDocs);
+                const t = getStats(allDocs);
+                const c = getStats(classDocs);
 
                 content.innerHTML = `
-                    <h1 class="text-2xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Simulator Dashboard</h1>
-                    
+                    <h1 class="text-2xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Leraar Dashboard</h1>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
                         <div class="space-y-4">
-                            <h2 class="text-blue-400 font-bold uppercase text-xs tracking-widest">Groep: Deze Klas (Laatste uur)</h2>
-                            <div class="bg-slate-800/50 p-4 rounded-xl border border-blue-500/20">
-                                <div class="text-3xl font-bold">${classStats.total}</div>
-                                <div class="text-[10px] text-slate-400 uppercase">Leerlingen voltooid</div>
+                            <h2 class="text-blue-400 font-bold uppercase text-[10px] tracking-widest">GROEP: DEZE KLAS (Laatste uur)</h2>
+                            <div class="bg-slate-800/80 p-4 rounded-xl border border-blue-500/30">
+                                <div class="text-2xl font-bold">${c.total}</div>
+                                <div class="text-[10px] text-slate-400 uppercase">Leerlingen</div>
                             </div>
-                            <div class="bg-slate-800/50 p-4 rounded-xl border border-red-500/20">
-                                <div class="text-3xl font-bold text-red-500">${classStats.avg} <span class="text-sm text-slate-500">/ 4</span></div>
-                                <div class="text-[10px] text-slate-400 uppercase">Gemiddelde Clickbait Score</div>
+                            <div class="bg-slate-800/80 p-4 rounded-xl border border-red-500/30">
+                                <div class="text-2xl font-bold text-red-500">${c.avg} <span class="text-sm text-slate-500">/ 4</span></div>
+                                <div class="text-[10px] text-slate-400 uppercase">Gem. Clickbait Score</div>
                             </div>
-                            <div class="bg-slate-800/50 p-4 rounded-xl border border-purple-500/20">
-                                <div class="flex justify-between items-end">
-                                    <div class="text-3xl font-bold text-purple-400">${classStats.rabbitPerc}%</div>
-                                    <div class="w-24 bg-slate-700 h-2 rounded-full overflow-hidden mb-2">
-                                        <div class="bg-purple-500 h-full" style="width: ${classStats.rabbitPerc}%"></div>
-                                    </div>
+                            <div class="bg-slate-800/80 p-4 rounded-xl border border-purple-500/30">
+                                <div class="flex justify-between items-center mb-1">
+                                    <div class="text-2xl font-bold text-purple-400">${c.rabbitPerc}%</div>
+                                    <div class="text-[10px] text-slate-400 uppercase">Rabbit Hole</div>
                                 </div>
-                                <div class="text-[10px] text-slate-400 uppercase">In de Rabbit Hole (score ≥ 2)</div>
+                                <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
+                                    <div class="bg-purple-500 h-full transition-all duration-1000" style="width: ${c.rabbitPerc}%"></div>
+                                </div>
                             </div>
                         </div>
-
                         <div class="space-y-4">
-                            <h2 class="text-slate-500 font-bold uppercase text-xs tracking-widest">Globaal Overzicht (Alle data)</h2>
-                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
-                                <div class="text-2xl font-bold">${totalStats.total}</div>
-                                <div class="text-[10px] text-slate-500 uppercase">Totaal aantal deelnemers</div>
+                            <h2 class="text-slate-500 font-bold uppercase text-[10px] tracking-widest">GLOBAAL (Alle sessies)</h2>
+                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 opacity-80">
+                                <div class="text-xl font-bold">${t.total}</div>
+                                <div class="text-[10px] text-slate-500 uppercase">Totaal voltooid</div>
                             </div>
-                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
-                                <div class="text-2xl font-bold">${totalStats.avg} <span class="text-sm text-slate-600">/ 4</span></div>
-                                <div class="text-[10px] text-slate-500 uppercase">Gemiddelde Score Totaal</div>
+                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 opacity-80">
+                                <div class="text-xl font-bold text-slate-300">${t.avg} <span class="text-sm text-slate-600">/ 4</span></div>
+                                <div class="text-[10px] text-slate-500 uppercase">Gem. Score Globaal</div>
                             </div>
-                             <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
-                                <div class="text-2xl font-bold text-slate-400">${totalStats.rabbitPerc}%</div>
+                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/50 opacity-80">
+                                <div class="text-xl font-bold text-slate-400">${t.rabbitPerc}%</div>
                                 <div class="text-[10px] text-slate-500 uppercase">Globaal Rabbit Hole %</div>
                             </div>
                         </div>
                     </div>
-
                     <div class="mt-8 flex gap-4 justify-center">
-                        <button onclick="renderDashboard()" class="bg-blue-600 hover:bg-blue-500 text-white py-2 px-6 rounded-lg text-sm transition font-bold">Ververs Data</button>
-                        <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white py-2 px-6 rounded-lg text-sm transition">Terug naar Start</button>
+                        <button onclick="renderDashboard()" class="bg-blue-600 text-white py-2 px-6 rounded-lg text-sm font-bold">Ververs</button>
+                        <button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg text-sm">Terug</button>
                     </div>
                 `;
-            } catch (e) {
-                content.innerHTML = `<p class="text-red-500">Fout bij laden: ${e.message}</p>`;
-            }
+            } catch (e) { console.error(e); }
         };
 
         window.onload = () => renderGame('start');
@@ -301,7 +268,7 @@
         .rabbit-hole-level-2 { background-color: #312e81; }
         .rabbit-hole-level-3 { background-color: #4c1d1d; }
         .rabbit-hole-level-4 { background-color: #7f1d1d; }
-        #tunnel-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 100; overflow: hidden; }
+        #tunnel-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 100; }
         .tunnel-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid white; border-radius: 50%; opacity: 0; }
         @keyframes fall { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200vw; height: 200vw; opacity: 0; } }
         .glitch { font-family: 'Special Elite', cursive; }
@@ -314,8 +281,7 @@
     <div class="container mx-auto px-4 max-w-2xl md:max-w-3xl" id="ui-wrapper">
         <div id="game-container" class="glass-card rounded-2xl p-6 md:p-12 text-center relative min-h-[400px] flex flex-col justify-center">
             <div id="content"></div>
-            <!-- Verborgen dashboard knop -->
-            <button onclick="openDashboard()" class="absolute bottom-4 left-4 opacity-5 hover:opacity-100 text-[10px] text-slate-500">Admin Dashboard</button>
+            <button onclick="openDashboard()" class="absolute bottom-4 left-4 opacity-5 hover:opacity-100 text-[10px] text-slate-500">Dashboard</button>
         </div>
     </div>
 </body>
