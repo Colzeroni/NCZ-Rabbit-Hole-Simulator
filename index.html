@@ -54,7 +54,7 @@
                 text: "Je merkt dat video's constant bufferen. De directie wijst naar technische problemen, maar de realiteit is vaak complexer. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Besparingen in het onderwijs", type: "saai", next: "level2_saai" },
-                    { text: "WI-FI STRALING VERANDERT JE DNA!", type: "clickbait", next: "level2_complot" }
+                    { text: "LEES: WI-FI STRALING VERANDERT JE DNA!", type: "clickbait", next: "level2_complot" }
                 ]
             },
             level2_saai: {
@@ -62,7 +62,7 @@
                 text: "Oude servers kunnen de smartphones niet aan. Er is geen budget voor glasvezel. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Slecht management van budgetten", type: "saai", next: "level3_saai" },
-                    { text: "HET IS EEN EXPERIMENT OM ONS DOM TE HOUDEN!", type: "clickbait", next: "level3_complot" }
+                    { text: "LEES: HET IS EEN EXPERIMENT OM ONS DOM TE HOUDEN!", type: "clickbait", next: "level3_complot" }
                 ]
             },
             level2_complot: {
@@ -70,7 +70,7 @@
                 text: "Routers staan op een 'bio-frequentie' die inwerkt op je cellen en vermoeidheid veroorzaakt. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Gebrek aan ventilatie en focus", type: "saai", next: "level3_saai" },
-                    { text: "HET IS EEN MENSELIJK EXPERIMENT VAN DE ELITE!", type: "clickbait", next: "level3_complot" }
+                    { text: "LEES: HET IS EEN MENSELIJK EXPERIMENT VAN DE ELITE!", type: "clickbait", next: "level3_complot" }
                 ]
             },
             level3_saai: {
@@ -78,7 +78,7 @@
                 text: "Aanbestedingen duren jaren; de technologie is al verouderd bij installatie. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Gebrekkige ICT-ondersteuning", type: "saai", next: "level4_saai" },
-                    { text: "DE ROUTERS SCANNEN JE HERSENGOLVEN!", type: "clickbait", next: "level4_complot" }
+                    { text: "LEES: DE ROUTERS SCANNEN JE HERSENGOLVEN!", type: "clickbait", next: "level4_complot" }
                 ]
             },
             level3_complot: {
@@ -86,7 +86,7 @@
                 text: "De trage snelheid brengt je brein in een 'alfastaat' van totale passiviteit. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: De impact van schermtijd", type: "saai", next: "level4_saai" },
-                    { text: "HET GAAT OM TOTALE GEDACHTENCONTROLE!", type: "clickbait", next: "level4_complot" }
+                    { text: "LEES: HET GAAT OM TOTALE GEDACHTENCONTROLE!", type: "clickbait", next: "level4_complot" }
                 ]
             },
             level4_saai: {
@@ -94,7 +94,7 @@
                 text: "Big Tech beperkt hardware om dure abonnementen af te dwingen. Winstmaximalisatie ten koste van jou. Wil je de conclusie lezen?",
                 choices: [
                     { text: "Artikel: De macht van Big Tech", type: "saai", next: "finish" },
-                    { text: "DE WERELDORDE GEBRUIKT SCHOOL ALS LAB!", type: "clickbait", next: "finish" }
+                    { text: "LEES: DE WERELDORDE GEBRUIKT SCHOOL ALS LAB!", type: "clickbait", next: "finish" }
                 ]
             },
             level4_complot: {
@@ -102,7 +102,7 @@
                 text: "De school is een testcentrum voor de Nieuwe Wereldorde. Wie niet klaagt over Wi-Fi, is gemarkeerd als gehoorzame onderdaan! Wil je de waarheid zien?",
                 choices: [
                     { text: "Artikel: Psychologie van de massa", type: "saai", next: "finish" },
-                    { text: "ONTWAAK! BEKIJK HET GEHEIME RAPPORT!", type: "clickbait", next: "finish" }
+                    { text: "LEES: ONTWAAK! BEKIJK HET GEHEIME RAPPORT!", type: "clickbait", next: "finish" }
                 ]
             }
         };
@@ -224,7 +224,6 @@
                     return;
                 }
 
-                // Filtering op tijd (laatste 60 minuten)
                 const oneHourAgo = Date.now() - (60 * 60 * 1000);
                 const classDocs = allDocs.filter(d => d.timestamp > oneHourAgo);
 
@@ -232,7 +231,6 @@
                     const total = data.length;
                     if (total === 0) return { total: 0, avg: "0.0", rabbitPerc: 0 };
                     const avg = (data.reduce((acc, curr) => acc + curr.clickbait, 0) / total).toFixed(1);
-                    // Rabbit Hole vanaf 2 clickbaits
                     const rabbitCount = data.filter(d => d.clickbait >= 2).length;
                     const rabbitPerc = Math.round((rabbitCount / total) * 100);
                     return { total, avg, rabbitPerc };
@@ -245,7 +243,6 @@
                     <h1 class="text-2xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Simulator Dashboard</h1>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
-                        <!-- Kolom 1: Deze Klas -->
                         <div class="space-y-4">
                             <h2 class="text-blue-400 font-bold uppercase text-xs tracking-widest">Groep: Deze Klas (Laatste uur)</h2>
                             <div class="bg-slate-800/50 p-4 rounded-xl border border-blue-500/20">
@@ -267,7 +264,6 @@
                             </div>
                         </div>
 
-                        <!-- Kolom 2: Globaal -->
                         <div class="space-y-4">
                             <h2 class="text-slate-500 font-bold uppercase text-xs tracking-widest">Globaal Overzicht (Alle data)</h2>
                             <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
