@@ -11,22 +11,21 @@
         import { getFirestore, doc, setDoc, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        // VERVANG ONDERSTAANDE GEGEVENS MET JOUW EIGEN FIREBASE CONFIGURATIE
+        // JOUW FIREBASE CONFIGURATIE
         const firebaseConfig = {
-    apiKey: "AIzaSyBYHGmL945bVk3EOf87a25flUjdLj6Vaws",
-    authDomain: "ncz-colman.firebaseapp.com",
-    projectId: "ncz-colman",
-    storageBucket: "ncz-colman.firebasestorage.app",
-    messagingSenderId: "885264340969",
-    appId: "1:885264340969:web:ab4d9b2b0d709f8b1e1d78",
-    measurementId: "G-PXNL6YY5GW"
-  };
+            apiKey: "AIzaSyBYHGmL945bVk3EOf87a25flUjdLj6Vaws",
+            authDomain: "ncz-colman.firebaseapp.com",
+            projectId: "ncz-colman",
+            storageBucket: "ncz-colman.firebasestorage.app",
+            messagingSenderId: "885264340969",
+            appId: "1:885264340969:web:ab4d9b2b0d709f8b1e1d78",
+            measurementId: "G-PXNL6YY5GW"
+        };
 
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const appId = 'rabbit-hole-sim'; // Verander dit eventueel per klas
-
+        
         // State management
         let user = null;
         let levelCount = 0;
@@ -128,7 +127,6 @@
             const saaiCount = userChoices.filter(t => t === 'saai').length;
             
             try {
-                // Let op: Verander het pad indien nodig naar de structuur van je database
                 const resultRef = doc(db, 'results', user.uid);
                 await setDoc(resultRef, {
                     clickbait: clickbaitCount,
@@ -185,17 +183,17 @@
             const content = document.getElementById('content');
             
             content.innerHTML = `
-                <h1 class="text-4xl font-bold mb-4 ${clickbaitCount >= 3 ? 'text-red-500' : 'text-green-400'}">Jouw Resultaat</h1>
+                <h1 class="text-4xl font-bold mb-4 ${clickbaitCount >= 2 ? 'text-red-500' : 'text-green-400'}">Jouw Resultaat</h1>
                 <p class="text-lg text-slate-300 mb-8">
-                    ${clickbaitCount >= 3 ? "Je bent diep in de Rabbit Hole gevallen! Je koos bijna elke keer voor sensatie." : "Je bleef bij de feiten. Je liet je niet verleiden door de schreeuwerige koppen."}
+                    ${clickbaitCount >= 2 ? "Je bent de Rabbit Hole in gegaan! Je koos regelmatig voor de sensationele koppen." : "Je bleef bij de feiten. Je liet je niet verleiden door de schreeuwerige koppen."}
                 </p>
                 <div class="grid grid-cols-2 gap-4 mb-8">
                     <div class="p-6 bg-slate-800 rounded-xl">
-                        <div class="text-4xl font-bold text-red-500">${clickbaitCount}</div>
+                        <div class="text-4xl font-bold text-red-500">${clickbaitCount}/4</div>
                         <div class="text-xs uppercase mt-2 text-slate-400 font-bold">Sensatie</div>
                     </div>
                     <div class="p-6 bg-slate-800 rounded-xl">
-                        <div class="text-4xl font-bold text-blue-400">${saaiCount}</div>
+                        <div class="text-4xl font-bold text-blue-400">${saaiCount}/4</div>
                         <div class="text-xs uppercase mt-2 text-slate-400 font-bold">Feiten</div>
                     </div>
                 </div>
@@ -214,39 +212,83 @@
 
         const renderDashboard = async () => {
             const content = document.getElementById('content');
-            content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-blue-400">Klasoverzicht laden...</h1>`;
+            content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-blue-400 italic">Data analyseren...</h1>`;
             
             try {
                 const q = query(collection(db, 'results'));
                 const snapshot = await getDocs(q);
-                const docs = snapshot.docs.map(d => d.data());
+                const allDocs = snapshot.docs.map(d => d.data());
                 
-                if (docs.length === 0) {
-                    content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-yellow-400">Nog geen resultaten gevonden.</h1><button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg">Terug</button>`;
+                if (allDocs.length === 0) {
+                    content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-yellow-400">Geen data gevonden.</h1><button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg">Terug</button>`;
                     return;
                 }
 
-                const total = docs.length;
-                const avgClickbait = (docs.reduce((acc, curr) => acc + curr.clickbait, 0) / total).toFixed(1);
-                const rabbitHoleCount = docs.filter(d => d.clickbait >= 3).length;
+                // Filtering op tijd (laatste 60 minuten)
+                const oneHourAgo = Date.now() - (60 * 60 * 1000);
+                const classDocs = allDocs.filter(d => d.timestamp > oneHourAgo);
+
+                const getStats = (data) => {
+                    const total = data.length;
+                    if (total === 0) return { total: 0, avg: "0.0", rabbitPerc: 0 };
+                    const avg = (data.reduce((acc, curr) => acc + curr.clickbait, 0) / total).toFixed(1);
+                    // Rabbit Hole vanaf 2 clickbaits
+                    const rabbitCount = data.filter(d => d.clickbait >= 2).length;
+                    const rabbitPerc = Math.round((rabbitCount / total) * 100);
+                    return { total, avg, rabbitPerc };
+                };
+
+                const totalStats = getStats(allDocs);
+                const classStats = getStats(classDocs);
 
                 content.innerHTML = `
-                    <h1 class="text-3xl font-bold mb-6 text-blue-400">Klasoverzicht Dashboard</h1>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                        <div class="p-4 bg-slate-800 rounded-xl border border-blue-500/30">
-                            <div class="text-3xl font-bold text-white">${total}</div>
-                            <div class="text-xs uppercase text-slate-400">Deelnemers</div>
+                    <h1 class="text-2xl font-bold mb-6 text-white border-b border-slate-700 pb-2">Simulator Dashboard</h1>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+                        <!-- Kolom 1: Deze Klas -->
+                        <div class="space-y-4">
+                            <h2 class="text-blue-400 font-bold uppercase text-xs tracking-widest">Groep: Deze Klas (Laatste uur)</h2>
+                            <div class="bg-slate-800/50 p-4 rounded-xl border border-blue-500/20">
+                                <div class="text-3xl font-bold">${classStats.total}</div>
+                                <div class="text-[10px] text-slate-400 uppercase">Leerlingen voltooid</div>
+                            </div>
+                            <div class="bg-slate-800/50 p-4 rounded-xl border border-red-500/20">
+                                <div class="text-3xl font-bold text-red-500">${classStats.avg} <span class="text-sm text-slate-500">/ 4</span></div>
+                                <div class="text-[10px] text-slate-400 uppercase">Gemiddelde Clickbait Score</div>
+                            </div>
+                            <div class="bg-slate-800/50 p-4 rounded-xl border border-purple-500/20">
+                                <div class="flex justify-between items-end">
+                                    <div class="text-3xl font-bold text-purple-400">${classStats.rabbitPerc}%</div>
+                                    <div class="w-24 bg-slate-700 h-2 rounded-full overflow-hidden mb-2">
+                                        <div class="bg-purple-500 h-full" style="width: ${classStats.rabbitPerc}%"></div>
+                                    </div>
+                                </div>
+                                <div class="text-[10px] text-slate-400 uppercase">In de Rabbit Hole (score ≥ 2)</div>
+                            </div>
                         </div>
-                        <div class="p-4 bg-slate-800 rounded-xl border border-red-500/30">
-                            <div class="text-3xl font-bold text-red-500">${avgClickbait}</div>
-                            <div class="text-xs uppercase text-slate-400">Gem. Clickbait Score</div>
-                        </div>
-                        <div class="p-4 bg-slate-800 rounded-xl border border-purple-500/30">
-                            <div class="text-3xl font-bold text-purple-400">${rabbitHoleCount}</div>
-                            <div class="text-xs uppercase text-slate-400">In de Rabbit Hole</div>
+
+                        <!-- Kolom 2: Globaal -->
+                        <div class="space-y-4">
+                            <h2 class="text-slate-500 font-bold uppercase text-xs tracking-widest">Globaal Overzicht (Alle data)</h2>
+                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
+                                <div class="text-2xl font-bold">${totalStats.total}</div>
+                                <div class="text-[10px] text-slate-500 uppercase">Totaal aantal deelnemers</div>
+                            </div>
+                            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
+                                <div class="text-2xl font-bold">${totalStats.avg} <span class="text-sm text-slate-600">/ 4</span></div>
+                                <div class="text-[10px] text-slate-500 uppercase">Gemiddelde Score Totaal</div>
+                            </div>
+                             <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700 opacity-80">
+                                <div class="text-2xl font-bold text-slate-400">${totalStats.rabbitPerc}%</div>
+                                <div class="text-[10px] text-slate-500 uppercase">Globaal Rabbit Hole %</div>
+                            </div>
                         </div>
                     </div>
-                    <button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg">Terug naar Start</button>
+
+                    <div class="mt-8 flex gap-4 justify-center">
+                        <button onclick="renderDashboard()" class="bg-blue-600 hover:bg-blue-500 text-white py-2 px-6 rounded-lg text-sm transition font-bold">Ververs Data</button>
+                        <button onclick="location.reload()" class="bg-slate-700 hover:bg-slate-600 text-white py-2 px-6 rounded-lg text-sm transition">Terug naar Start</button>
+                    </div>
                 `;
             } catch (e) {
                 content.innerHTML = `<p class="text-red-500">Fout bij laden: ${e.message}</p>`;
@@ -257,8 +299,8 @@
     </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;700&display=swap');
-        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow-x: hidden; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; }
         .rabbit-hole-level-1 { background-color: #1e1b4b; }
         .rabbit-hole-level-2 { background-color: #312e81; }
         .rabbit-hole-level-3 { background-color: #4c1d1d; }
@@ -273,11 +315,11 @@
 </head>
 <body id="mainBody">
     <div id="tunnel-container"></div>
-    <div class="container mx-auto px-4 max-w-2xl" id="ui-wrapper">
-        <div id="game-container" class="glass-card rounded-2xl p-8 md:p-12 text-center relative">
+    <div class="container mx-auto px-4 max-w-2xl md:max-w-3xl" id="ui-wrapper">
+        <div id="game-container" class="glass-card rounded-2xl p-6 md:p-12 text-center relative min-h-[400px] flex flex-col justify-center">
             <div id="content"></div>
             <!-- Verborgen dashboard knop -->
-            <button onclick="openDashboard()" class="absolute bottom-4 left-4 opacity-10 hover:opacity-100 text-[10px] text-slate-500">Dashboard</button>
+            <button onclick="openDashboard()" class="absolute bottom-4 left-4 opacity-5 hover:opacity-100 text-[10px] text-slate-500">Admin Dashboard</button>
         </div>
     </div>
 </body>
