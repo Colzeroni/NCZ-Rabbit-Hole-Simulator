@@ -5,109 +5,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>De Wi-Fi Rabbit Hole</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;700&display=swap');
-        
-        body {
-            background-color: #0f172a;
-            color: #f8fafc;
-            font-family: 'Inter', sans-serif;
-            transition: background-color 1s ease;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow-x: hidden;
-        }
+    <!-- Firebase Imports -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getFirestore, doc, setDoc, collection, query, getDocs } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
 
-        .conspiracy-font {
-            font-family: 'Special Elite', cursive;
-        }
+        // VERVANG ONDERSTAANDE GEGEVENS MET JOUW EIGEN FIREBASE CONFIGURATIE
+        const firebaseConfig = {
+    apiKey: "AIzaSyBYHGmL945bVk3EOf87a25flUjdLj6Vaws",
+    authDomain: "ncz-colman.firebaseapp.com",
+    projectId: "ncz-colman",
+    storageBucket: "ncz-colman.firebasestorage.app",
+    messagingSenderId: "885264340969",
+    appId: "1:885264340969:web:ab4d9b2b0d709f8b1e1d78",
+    measurementId: "G-PXNL6YY5GW"
+  };
 
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-        }
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = 'rabbit-hole-sim'; // Verander dit eventueel per klas
 
-        .rabbit-hole-level-1 { background-color: #1e1b4b; }
-        .rabbit-hole-level-2 { background-color: #312e81; }
-        .rabbit-hole-level-3 { background-color: #4c1d1d; }
-        .rabbit-hole-level-4 { background-color: #7f1d1d; }
+        // State management
+        let user = null;
+        let levelCount = 0;
+        let userChoices = [];
 
-        .btn-choice {
-            transition: all 0.3s ease;
-            transform: translateY(0);
-        }
-        .btn-choice:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
+        // Auth init
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch (error) {
+                console.error("Auth error:", error);
+            }
+        };
+        onAuthStateChanged(auth, (u) => { user = u; });
+        initAuth();
 
-        .glitch {
-            animation: glitch 1s linear infinite;
-        }
-
-        @keyframes glitch {
-            2%, 64% { transform: translate(2px, 0) skew(0deg); }
-            4%, 60% { transform: translate(-2px, 0) skew(0deg); }
-            62% { transform: translate(0, 0) skew(5deg); }
-        }
-
-        #tunnel-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: black;
-            display: none;
-            z-index: 100;
-            overflow: hidden;
-        }
-
-        .tunnel-ring {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border: 2px solid white;
-            border-radius: 50%;
-            opacity: 0;
-        }
-
-        @keyframes fall {
-            0% { width: 0; height: 0; opacity: 1; border-width: 1px; }
-            100% { width: 200vw; height: 200vw; opacity: 0; border-width: 20px; }
-        }
-    </style>
-</head>
-<body id="mainBody">
-
-    <div id="tunnel-container"></div>
-
-    <div class="container mx-auto px-4 max-w-2xl" id="ui-wrapper">
-        <div id="game-container" class="glass-card rounded-2xl p-8 md:p-12 text-center">
-            <div id="content">
-                <h1 class="text-3xl font-bold mb-6">Wachten op verbinding...</h1>
-                <p class="text-slate-400">De simulator wordt geladen.</p>
-            </div>
-        </div>
-    </div>
-
-    <script>
+        // Game Data
         const gameData = {
             start: {
                 title: "Vraag jij je dit ook af?",
                 text: "Willen jullie ook weten waarom de wi-fi op school zo traag is?",
-                choices: [
-                    { text: "Ja, ik ben benieuwd!", next: "level1" }
-                ]
+                choices: [{ text: "Ja, ik ben benieuwd!", next: "level1" }]
             },
             level1: {
                 title: "Het onderzoek start",
-                text: "Je merkt dat video's constant bufferen en documenten niet laden op school. De directie wijst naar technische problemen, maar de realiteit is vaak complexer dan een simpele error-code. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Je merkt dat video's constant bufferen. De directie wijst naar technische problemen, maar de realiteit is vaak complexer. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Besparingen in het onderwijs", type: "saai", next: "level2_saai" },
                     { text: "WI-FI STRALING VERANDERT JE DNA!", type: "clickbait", next: "level2_complot" }
@@ -115,7 +60,7 @@
             },
             level2_saai: {
                 title: "Bezuinigingsronde",
-                text: "Door jarenlange bezuinigingen is de IT-infrastructuur verouderd. Servers uit 2012 kunnen de honderden smartphones van leerlingen simpelweg niet meer aansturen. Er is geen budget voor glasvezel, waardoor de snelheid dramatisch laag blijft. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Oude servers kunnen de smartphones niet aan. Er is geen budget voor glasvezel. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Slecht management van budgetten", type: "saai", next: "level3_saai" },
                     { text: "HET IS EEN EXPERIMENT OM ONS DOM TE HOUDEN!", type: "clickbait", next: "level3_complot" }
@@ -123,7 +68,7 @@
             },
             level2_complot: {
                 title: "Onzichtbare golven",
-                text: "Onderzoekers waarschuwen dat school-routers ingesteld staan op een specifieke 'bio-frequentie'. De trage verbinding is een bijproduct van golven die direct inwerken op je cellen, wat vermoeidheid en concentratieverlies veroorzaakt. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Routers staan op een 'bio-frequentie' die inwerkt op je cellen en vermoeidheid veroorzaakt. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Gebrek aan ventilatie en focus", type: "saai", next: "level3_saai" },
                     { text: "HET IS EEN MENSELIJK EXPERIMENT VAN DE ELITE!", type: "clickbait", next: "level3_complot" }
@@ -131,7 +76,7 @@
             },
             level3_saai: {
                 title: "Bureaucratische molens",
-                text: "Het probleem ligt bij de trage bureaucratie van onderwijskoepels. Aanbestedingen duren jaren en tegen de tijd dat er nieuwe routers hangen, is de technologie alweer verouderd. ICT-coördinatoren doen hun best met de middelen die ze krijgen. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "Aanbestedingen duren jaren; de technologie is al verouderd bij installatie. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: Gebrekkige ICT-ondersteuning", type: "saai", next: "level4_saai" },
                     { text: "DE ROUTERS SCANNEN JE HERSENGOLVEN!", type: "clickbait", next: "level4_complot" }
@@ -139,7 +84,7 @@
             },
             level3_complot: {
                 title: "Hersen-synchronisatie",
-                text: "Terwijl jij wacht op een webpagina, synchroniseert de router met je hersengolven. De trage snelheid is bedoeld om je brein in een 'alfastaat' te brengen: een staat van totale passiviteit en beïnvloedbaarheid. De routers dienen als antennes voor iets veel groters. Wil je meer weten? Kies één van de volgende artikelen:",
+                text: "De trage snelheid brengt je brein in een 'alfastaat' van totale passiviteit. Wil je meer weten? Kies één van de volgende artikelen:",
                 choices: [
                     { text: "Artikel: De impact van schermtijd", type: "saai", next: "level4_saai" },
                     { text: "HET GAAT OM TOTALE GEDACHTENCONTROLE!", type: "clickbait", next: "level4_complot" }
@@ -147,15 +92,15 @@
             },
             level4_saai: {
                 title: "Economische belangen",
-                text: "Grote softwareleveranciers hebben wurgcontracten afgesloten met scholen. De hardware is doelbewust beperkt om scholen te dwingen tot dure cloud-abonnementen. Het is een simpel verhaal van winstmaximalisatie ten koste van de leerling. Wil je de conclusie van dit onderzoek lezen?",
+                text: "Big Tech beperkt hardware om dure abonnementen af te dwingen. Winstmaximalisatie ten koste van jou. Wil je de conclusie lezen?",
                 choices: [
-                    { text: "Artikel: De macht van Big Tech in de klas", type: "saai", next: "finish" },
-                    { text: "DE WERELDORDE GEBRUIKT SCHOOL ALS BREEDER-LAB!", type: "clickbait", next: "finish" }
+                    { text: "Artikel: De macht van Big Tech", type: "saai", next: "finish" },
+                    { text: "DE WERELDORDE GEBRUIKT SCHOOL ALS LAB!", type: "clickbait", next: "finish" }
                 ]
             },
             level4_complot: {
                 title: "DE WERELDORDE",
-                text: "De trage verbinding is de 'final test' van de Nieuwe Wereldorde. Scholen zijn getransformeerd tot kweekvijvers waar via Wi-Fi-signalen wordt geselecteerd wie gehoorzaam is. Degenen die niet klagen over de snelheid, worden gemarkeerd als de perfecte, hersenloze onderdanen voor het nieuwe regime! Wil je de ultieme waarheid zien?",
+                text: "De school is een testcentrum voor de Nieuwe Wereldorde. Wie niet klaagt over Wi-Fi, is gemarkeerd als gehoorzame onderdaan! Wil je de waarheid zien?",
                 choices: [
                     { text: "Artikel: Psychologie van de massa", type: "saai", next: "finish" },
                     { text: "ONTWAAK! BEKIJK HET GEHEIME RAPPORT!", type: "clickbait", next: "finish" }
@@ -163,149 +108,177 @@
             }
         };
 
-        let userChoices = [];
-        let levelCount = 0;
-
-        function renderStep(stepKey) {
-            const step = gameData[stepKey];
-            const contentDiv = document.getElementById('content');
-            const body = document.getElementById('mainBody');
-
-            if (levelCount > 0) {
-                body.className = `rabbit-hole-level-${levelCount}`;
+        // UI Functies
+        window.makeChoice = async (nextStep, type) => {
+            if (nextStep === 'finish') {
+                if (type !== 'start') userChoices.push(type);
+                await saveResult();
+                await startRabbitHoleAnimation();
+                renderResults();
+                return;
             }
+            if (type !== 'start') userChoices.push(type);
+            levelCount++;
+            renderGame(nextStep);
+        };
 
-            let html = `
-                <h2 class="text-sm uppercase tracking-widest text-blue-400 mb-2 font-bold">${levelCount > 0 ? 'Level ' + levelCount + ' van 4' : 'Introductie'}</h2>
-                <h1 class="text-3xl font-bold mb-6 ${levelCount >= 3 ? 'glitch conspiracy-font text-red-500' : ''}">${step.title}</h1>
-                <div class="space-y-4 mb-8">
-                    <p class="text-lg leading-relaxed text-slate-300 italic">"${step.text}"</p>
-                </div>
-                <div class="flex flex-col gap-4">
-            `;
+        const saveResult = async () => {
+            if (!user) return;
+            const clickbaitCount = userChoices.filter(t => t === 'clickbait').length;
+            const saaiCount = userChoices.filter(t => t === 'saai').length;
+            
+            try {
+                // Let op: Verander het pad indien nodig naar de structuur van je database
+                const resultRef = doc(db, 'results', user.uid);
+                await setDoc(resultRef, {
+                    clickbait: clickbaitCount,
+                    saai: saaiCount,
+                    timestamp: Date.now()
+                });
+            } catch (e) { console.error("Fout bij opslaan:", e); }
+        };
 
-            step.choices.forEach(choice => {
-                const isClickbait = choice.type === 'clickbait';
-                const btnClass = isClickbait 
-                    ? 'bg-red-600 hover:bg-red-500 text-white font-bold py-4 px-6 rounded-xl border-b-4 border-red-800' 
-                    : 'bg-slate-700 hover:bg-slate-600 text-slate-200 py-3 px-6 rounded-xl border-b-4 border-slate-900';
-                
-                html += `
-                    <button onclick="makeChoice('${choice.next}', '${choice.type || 'start'}')" class="btn-choice ${btnClass} text-left flex justify-between items-center group">
-                        <span class="${isClickbait ? 'uppercase' : ''}">${choice.text}</span>
-                        <span class="opacity-0 group-hover:opacity-100 transition-opacity">→</span>
-                    </button>
-                `;
-            });
-
-            html += `</div>`;
-            contentDiv.innerHTML = html;
-        }
-
-        async function startRabbitHoleAnimation() {
+        const startRabbitHoleAnimation = async () => {
             const tunnel = document.getElementById('tunnel-container');
             const ui = document.getElementById('ui-wrapper');
-            
             ui.style.transition = 'opacity 1s, transform 2s';
             ui.style.opacity = '0';
             ui.style.transform = 'scale(0.1) rotate(25deg)';
-            
             tunnel.style.display = 'block';
-
-            const clickbaitCount = userChoices.filter(t => t === 'clickbait').length;
-
             for (let i = 0; i < 25; i++) {
                 setTimeout(() => {
                     const ring = document.createElement('div');
                     ring.className = 'tunnel-ring';
-                    const ringColor = clickbaitCount >= 3 ? 'rgba(255, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.3)';
-                    ring.style.borderColor = ringColor;
                     ring.style.animation = `fall 2s linear forwards`;
                     tunnel.appendChild(ring);
                     setTimeout(() => ring.remove(), 2000);
                 }, i * 140);
             }
-
-            return new Promise(resolve => setTimeout(resolve, 3800));
-        }
-
-        async function makeChoice(nextStep, type) {
-            if (nextStep === 'finish') {
-                if (type !== 'start') userChoices.push(type);
-                await startRabbitHoleAnimation();
-                showResults();
-                return;
-            }
-
-            if (type !== 'start') {
-                userChoices.push(type);
-            }
-            
-            levelCount++;
-            
-            renderStep(nextStep);
-        }
-
-        function showResults() {
-            const tunnel = document.getElementById('tunnel-container');
-            const ui = document.getElementById('ui-wrapper');
-            const contentDiv = document.getElementById('content');
-            const body = document.getElementById('mainBody');
-
+            await new Promise(r => setTimeout(r, 3800));
             tunnel.style.display = 'none';
             ui.style.opacity = '1';
             ui.style.transform = 'scale(1) rotate(0deg)';
-            body.className = 'bg-slate-950';
+        };
 
-            const clickbaitCount = userChoices.filter(t => t === 'clickbait').length;
-            const saaiCount = userChoices.filter(t => t === 'saai').length;
+        const renderGame = (stepKey) => {
+            const step = gameData[stepKey];
+            const content = document.getElementById('content');
+            document.getElementById('mainBody').className = levelCount > 0 ? `rabbit-hole-level-${levelCount}` : 'bg-slate-900';
             
-            let resultTitle, resultDesc, resultColor;
-
-            if (clickbaitCount >= 3) {
-                resultTitle = "Je bent diep in de Rabbit Hole gevallen!";
-                resultDesc = "Je koos bijna elke keer voor de sensationele titels. Dit is precies hoe algoritmes werken: ze voeden je nieuwsgierigheid met steeds extremere content tot je de realiteit uit het oog verliest.";
-                resultColor = "text-red-500";
-            } else if (clickbaitCount > 0) {
-                resultTitle = "Je twijfelde tussen feit en fictie.";
-                resultDesc = "Soms liet je je verleiden door de sensatie, soms koos je voor de feiten. Dit laat zien hoe krachtig clickbait is; onze hersenen zijn geprogrammeerd om op 'geheimen' te klikken.";
-                resultColor = "text-yellow-500";
-            } else {
-                resultTitle = "Je bleef bij de nuchtere feiten.";
-                resultDesc = "Indrukwekkend! Je negeerde de schreeuwerige koppen en bleef zoeken naar de meest logische verklaring. Je bent kritisch en laat je niet zomaar meeslepen.";
-                resultColor = "text-green-400";
-            }
-
-            contentDiv.innerHTML = `
-                <h1 class="text-4xl font-bold mb-4 ${resultColor}">Resultaat</h1>
-                <h2 class="text-2xl font-bold mb-6">${resultTitle}</h2>
-                <p class="text-lg text-slate-300 mb-8">${resultDesc}</p>
-                
-                <div class="grid grid-cols-2 gap-4 mb-8">
-                    <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
-                        <div class="text-4xl font-bold text-red-500">${clickbaitCount}</div>
-                        <div class="text-xs uppercase mt-2 text-slate-400 tracking-wider font-bold">Sensatie / Clickbait</div>
-                    </div>
-                    <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
-                        <div class="text-4xl font-bold text-blue-400">${saaiCount}</div>
-                        <div class="text-xs uppercase mt-2 text-slate-400 tracking-wider font-bold">Logica / Feiten</div>
-                    </div>
-                </div>
-
-                <button onclick="location.reload()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-10 rounded-full transition shadow-lg">
-                    Start opnieuw
-                </button>
-                
-                <div class="mt-10 pt-8 border-t border-slate-700 text-left">
-                    <p class="text-blue-400 font-bold mb-2 tracking-widest uppercase text-xs">Waarom doen we dit?</p>
-                    <p class="text-sm text-slate-400">
-                        Deze simulatie laat zien hoe makkelijk je van een alledaags probleem (trage wifi) naar een extreem complot (wereldheerschappij) kunt glippen door simpelweg op de meest 'spannende' titel te klikken. Online platforms gebruiken dit mechanisme om je zo lang mogelijk vast te houden.
-                    </p>
+            content.innerHTML = `
+                <h2 class="text-sm uppercase tracking-widest text-blue-400 mb-2 font-bold">${levelCount > 0 ? 'Level ' + levelCount + ' van 4' : 'Introductie'}</h2>
+                <h1 class="text-3xl font-bold mb-6 ${levelCount >= 3 ? 'glitch text-red-500' : ''}">${step.title}</h1>
+                <p class="text-lg leading-relaxed text-slate-300 italic mb-8">"${step.text}"</p>
+                <div class="flex flex-col gap-4">
+                    ${step.choices.map(c => `
+                        <button onclick="makeChoice('${c.next}', '${c.type || 'start'}')" class="btn-choice ${c.type === 'clickbait' ? 'bg-red-600 border-red-800' : 'bg-slate-700 border-slate-900'} text-white font-bold py-4 px-6 rounded-xl border-b-4 text-left">
+                            ${c.text}
+                        </button>
+                    `).join('')}
                 </div>
             `;
-        }
+        };
 
-        window.onload = () => renderStep('start');
+        const renderResults = () => {
+            const clickbaitCount = userChoices.filter(t => t === 'clickbait').length;
+            const saaiCount = userChoices.filter(t => t === 'saai').length;
+            const content = document.getElementById('content');
+            
+            content.innerHTML = `
+                <h1 class="text-4xl font-bold mb-4 ${clickbaitCount >= 3 ? 'text-red-500' : 'text-green-400'}">Jouw Resultaat</h1>
+                <p class="text-lg text-slate-300 mb-8">
+                    ${clickbaitCount >= 3 ? "Je bent diep in de Rabbit Hole gevallen! Je koos bijna elke keer voor sensatie." : "Je bleef bij de feiten. Je liet je niet verleiden door de schreeuwerige koppen."}
+                </p>
+                <div class="grid grid-cols-2 gap-4 mb-8">
+                    <div class="p-6 bg-slate-800 rounded-xl">
+                        <div class="text-4xl font-bold text-red-500">${clickbaitCount}</div>
+                        <div class="text-xs uppercase mt-2 text-slate-400 font-bold">Sensatie</div>
+                    </div>
+                    <div class="p-6 bg-slate-800 rounded-xl">
+                        <div class="text-4xl font-bold text-blue-400">${saaiCount}</div>
+                        <div class="text-xs uppercase mt-2 text-slate-400 font-bold">Feiten</div>
+                    </div>
+                </div>
+                <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-full">Probeer opnieuw</button>
+            `;
+        };
+
+        window.openDashboard = () => {
+            const pass = prompt("Voer de leraarcode in:");
+            if (pass === "1234") {
+                renderDashboard();
+            } else {
+                alert("Verkeerde code!");
+            }
+        };
+
+        const renderDashboard = async () => {
+            const content = document.getElementById('content');
+            content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-blue-400">Klasoverzicht laden...</h1>`;
+            
+            try {
+                const q = query(collection(db, 'results'));
+                const snapshot = await getDocs(q);
+                const docs = snapshot.docs.map(d => d.data());
+                
+                if (docs.length === 0) {
+                    content.innerHTML = `<h1 class="text-2xl font-bold mb-4 text-yellow-400">Nog geen resultaten gevonden.</h1><button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg">Terug</button>`;
+                    return;
+                }
+
+                const total = docs.length;
+                const avgClickbait = (docs.reduce((acc, curr) => acc + curr.clickbait, 0) / total).toFixed(1);
+                const rabbitHoleCount = docs.filter(d => d.clickbait >= 3).length;
+
+                content.innerHTML = `
+                    <h1 class="text-3xl font-bold mb-6 text-blue-400">Klasoverzicht Dashboard</h1>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div class="p-4 bg-slate-800 rounded-xl border border-blue-500/30">
+                            <div class="text-3xl font-bold text-white">${total}</div>
+                            <div class="text-xs uppercase text-slate-400">Deelnemers</div>
+                        </div>
+                        <div class="p-4 bg-slate-800 rounded-xl border border-red-500/30">
+                            <div class="text-3xl font-bold text-red-500">${avgClickbait}</div>
+                            <div class="text-xs uppercase text-slate-400">Gem. Clickbait Score</div>
+                        </div>
+                        <div class="p-4 bg-slate-800 rounded-xl border border-purple-500/30">
+                            <div class="text-3xl font-bold text-purple-400">${rabbitHoleCount}</div>
+                            <div class="text-xs uppercase text-slate-400">In de Rabbit Hole</div>
+                        </div>
+                    </div>
+                    <button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg">Terug naar Start</button>
+                `;
+            } catch (e) {
+                content.innerHTML = `<p class="text-red-500">Fout bij laden: ${e.message}</p>`;
+            }
+        };
+
+        window.onload = () => renderGame('start');
     </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Inter:wght@400;700&display=swap');
+        body { background-color: #0f172a; color: #f8fafc; font-family: 'Inter', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .rabbit-hole-level-1 { background-color: #1e1b4b; }
+        .rabbit-hole-level-2 { background-color: #312e81; }
+        .rabbit-hole-level-3 { background-color: #4c1d1d; }
+        .rabbit-hole-level-4 { background-color: #7f1d1d; }
+        #tunnel-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 100; overflow: hidden; }
+        .tunnel-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid white; border-radius: 50%; opacity: 0; }
+        @keyframes fall { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200vw; height: 200vw; opacity: 0; } }
+        .glitch { font-family: 'Special Elite', cursive; }
+        .btn-choice { transition: transform 0.2s; }
+        .btn-choice:active { transform: scale(0.98); }
+    </style>
+</head>
+<body id="mainBody">
+    <div id="tunnel-container"></div>
+    <div class="container mx-auto px-4 max-w-2xl" id="ui-wrapper">
+        <div id="game-container" class="glass-card rounded-2xl p-8 md:p-12 text-center relative">
+            <div id="content"></div>
+            <!-- Verborgen dashboard knop -->
+            <button onclick="openDashboard()" class="absolute bottom-4 left-4 opacity-10 hover:opacity-100 text-[10px] text-slate-500">Dashboard</button>
+        </div>
+    </div>
 </body>
 </html>
