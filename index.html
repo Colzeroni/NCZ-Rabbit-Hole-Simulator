@@ -44,12 +44,12 @@
         const gameData = {
             start: {
                 title: "Vraag jij je dit ook af?",
-                text: "Willen jullie ook weten waarom de wi-fi op school zo traag is?",
+                text: "Willen jullie ook weten waarom de wi-fi op school zo traag is? Het lijkt een simpele vraag, maar de antwoorden die je vindt hangen volledig af van waar je besluit te kijken.",
                 choices: [{ text: "Ja, ik ben benieuwd!", next: "level1" }]
             },
             level1: {
                 title: "Het onderzoek start",
-                text: "Je merkt dat video's constant bufferen. De directie wijst naar technische problemen. Wil je meer weten?",
+                text: "Je merkt dat video's constant bufferen en documenten niet laden. De directie wijst naar technische problemen, maar de realiteit is vaak complexer dan een simpele error-code. Is het een gebrek aan middelen, of is er iets anders aan de hand?",
                 choices: [
                     { text: "Artikel: Besparingen in het onderwijs", type: "saai", next: "level2_saai" },
                     { text: "LEES: WI-FI STRALING VERANDERT JE DNA!", type: "clickbait", next: "level2_complot" }
@@ -57,7 +57,7 @@
             },
             level2_saai: {
                 title: "Bezuinigingsronde",
-                text: "Oude servers kunnen de smartphones niet aan. Wil je meer weten?",
+                text: "Door jarenlange besparingen is de IT-infrastructuur zwaar verouderd. Servers uit 2012 kunnen de honderden smartphones van leerlingen simpelweg niet meer aansturen. Er is momenteel geen budget voor glasvezel, waardoor de snelheid dramatisch laag blijft terwijl de vraag naar data groeit.",
                 choices: [
                     { text: "Artikel: Slecht management van budgetten", type: "saai", next: "level3_saai" },
                     { text: "LEES: HET IS EEN EXPERIMENT OM ONS DOM TE HOUDEN!", type: "clickbait", next: "level3_complot" }
@@ -65,7 +65,7 @@
             },
             level2_complot: {
                 title: "Onzichtbare golven",
-                text: "Routers staan op een 'bio-frequentie' die inwerkt op je cellen. Wil je meer weten?",
+                text: "Kritische onderzoekers waarschuwen dat school-routers ingesteld staan op een specifieke 'bio-frequentie'. De trage verbinding zou een bijproduct zijn van golven die direct inwerken op je cellen en je biologische ritme verstoren. Dit veroorzaakt chronische vermoeidheid en concentratieverlies bij de jeugd.",
                 choices: [
                     { text: "Artikel: Gebrek aan ventilatie en focus", type: "saai", next: "level3_saai" },
                     { text: "LEES: HET IS EEN MENSELIJK EXPERIMENT VAN DE ELITE!", type: "clickbait", next: "level3_complot" }
@@ -73,7 +73,7 @@
             },
             level3_saai: {
                 title: "Bureaucratische molens",
-                text: "Aanbestedingen duren jaren; de technologie is al verouderd. Wil je meer weten?",
+                text: "Het probleem ligt bij de trage bureaucratie van onderwijskoepels. Aanbestedingen duren jaren en tegen de tijd dat er nieuwe routers hangen, is de technologie alweer verouderd. ICT-coördinatoren doen hun uiterste best met de schamele middelen die ze krijgen van de overheid.",
                 choices: [
                     { text: "Artikel: Gebrekkige ICT-ondersteuning", type: "saai", next: "level4_saai" },
                     { text: "LEES: DE ROUTERS SCANNEN JE HERSENGOLVEN!", type: "clickbait", next: "level4_complot" }
@@ -81,7 +81,7 @@
             },
             level3_complot: {
                 title: "Hersen-synchronisatie",
-                text: "De trage snelheid brengt je brein in een 'alfastaat'. Wil je meer weten?",
+                text: "Terwijl jij wacht op een webpagina, synchroniseert de router met je hersengolven. De trage snelheid is geen fout, maar een bewuste keuze om je brein in een 'alfastaat' te brengen: een staat van totale passiviteit en beïnvloedbaarheid. Je wordt langzaam voorbereid op externe suggesties zonder dat je het doorhebt.",
                 choices: [
                     { text: "Artikel: De impact van schermtijd", type: "saai", next: "level4_saai" },
                     { text: "LEES: HET GAAT OM TOTALE GEDACHTENCONTROLE!", type: "clickbait", next: "level4_complot" }
@@ -89,7 +89,7 @@
             },
             level4_saai: {
                 title: "Economische belangen",
-                text: "Big Tech beperkt hardware om dure abonnementen af te dwingen. Wil je de conclusie?",
+                text: "Grote softwareleveranciers hebben wurgcontracten afgesloten met scholen. De hardware wordt doelbewust beperkt om scholen te dwingen tot dure cloud-abonnementen. Het is een simpel, maar pijnlijk verhaal van winstmaximalisatie ten koste van de leerling en de kwaliteit van het onderwijs.",
                 choices: [
                     { text: "Artikel: De macht van Big Tech", type: "saai", next: "finish" },
                     { text: "LEES: DE WERELDORDE GEBRUIKT SCHOOL ALS LAB!", type: "clickbait", next: "finish" }
@@ -97,7 +97,7 @@
             },
             level4_complot: {
                 title: "DE WERELDORDE",
-                text: "De school is een testcentrum voor de Nieuwe Wereldorde. Wil je de waarheid?",
+                text: "De trage verbinding is de 'final test' van de Nieuwe Wereldorde. Scholen zijn getransformeerd tot kweekvijvers waar via Wi-Fi-signalen wordt geselecteerd wie gehoorzaam is aan vertraging en wie niet. Degenen die zwijgend wachten, worden gemarkeerd als de perfecte onderdanen voor het nieuwe regime dat in de schaduw wordt opgebouwd!",
                 choices: [
                     { text: "Artikel: Psychologie van de massa", type: "saai", next: "finish" },
                     { text: "LEES: ONTWAAK! BEKIJK HET GEHEIME RAPPORT!", type: "clickbait", next: "finish" }
@@ -158,9 +158,13 @@
             const step = gameData[stepKey];
             const content = document.getElementById('content');
             document.getElementById('mainBody').className = levelCount > 0 ? `rabbit-hole-level-${levelCount}` : 'bg-slate-900';
+            
+            // Bepaal of we de trillende animatie moeten toevoegen
+            const isShaking = stepKey.includes('level3_complot') || stepKey.includes('level4_complot') || stepKey === 'level3_complot' || stepKey === 'level4_complot';
+            
             content.innerHTML = `
                 <h2 class="text-sm uppercase tracking-widest text-blue-400 mb-2 font-bold">${levelCount > 0 ? 'Level ' + levelCount + ' van 4' : 'Introductie'}</h2>
-                <h1 class="text-3xl font-bold mb-6 ${levelCount >= 3 ? 'glitch text-red-500' : ''}">${step.title}</h1>
+                <h1 class="text-3xl font-bold mb-6 ${levelCount >= 3 ? 'glitch' : ''} ${isShaking ? 'shake text-red-500' : ''}">${step.title}</h1>
                 <p class="text-lg leading-relaxed text-slate-300 italic mb-8">"${step.text}"</p>
                 <div class="flex flex-col gap-4">
                     ${step.choices.map(c => `
@@ -177,12 +181,18 @@
             const content = document.getElementById('content');
             content.innerHTML = `
                 <h1 class="text-4xl font-bold mb-4 ${clickbaitCount >= 2 ? 'text-red-500' : 'text-green-400'}">Jouw Resultaat</h1>
-                <p class="text-lg text-slate-300 mb-8">${clickbaitCount >= 2 ? "Je bent de Rabbit Hole in gegaan!" : "Je bleef bij de feiten."}</p>
+                <p class="text-lg text-slate-300 mb-8">${clickbaitCount >= 2 ? "Je bent diep in de Rabbit Hole gevallen! Je nieuwsgierigheid naar sensationele koppen nam de bovenhand." : "Je bleef bij de nuchtere feiten. Je liet je niet verleiden door de schreeuwerige koppen."}</p>
                 <div class="grid grid-cols-2 gap-4 mb-8 text-center">
-                    <div class="p-6 bg-slate-800 rounded-xl"><div class="text-4xl font-bold text-red-500">${clickbaitCount}/4</div><div class="text-xs uppercase mt-2 text-slate-400">Sensatie</div></div>
-                    <div class="p-6 bg-slate-800 rounded-xl"><div class="text-4xl font-bold text-blue-400">${4 - clickbaitCount}/4</div><div class="text-xs uppercase mt-2 text-slate-400">Feiten</div></div>
+                    <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
+                        <div class="text-4xl font-bold text-red-500">${clickbaitCount}/4</div>
+                        <div class="text-xs uppercase mt-2 text-slate-400 font-bold tracking-widest">Sensatie</div>
+                    </div>
+                    <div class="p-6 bg-slate-800 rounded-xl border border-slate-700">
+                        <div class="text-4xl font-bold text-blue-400">${4 - clickbaitCount}/4</div>
+                        <div class="text-xs uppercase mt-2 text-slate-400 font-bold tracking-widest">Feiten</div>
+                    </div>
                 </div>
-                <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-full">Probeer opnieuw</button>
+                <button onclick="location.reload()" class="bg-blue-600 text-white font-bold py-3 px-10 rounded-full shadow-lg hover:bg-blue-500 transition">Probeer opnieuw</button>
             `;
         };
 
@@ -227,7 +237,7 @@
                             <div class="bg-slate-800/80 p-4 rounded-xl border border-purple-500/30">
                                 <div class="flex justify-between items-center mb-1">
                                     <div class="text-2xl font-bold text-purple-400">${c.rabbitPerc}%</div>
-                                    <div class="text-[10px] text-slate-400 uppercase">Rabbit Hole</div>
+                                    <div class="text-[10px] text-slate-400 uppercase">In de Rabbit Hole (≥2)</div>
                                 </div>
                                 <div class="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
                                     <div class="bg-purple-500 h-full transition-all duration-1000" style="width: ${c.rabbitPerc}%"></div>
@@ -251,7 +261,7 @@
                         </div>
                     </div>
                     <div class="mt-8 flex gap-4 justify-center">
-                        <button onclick="renderDashboard()" class="bg-blue-600 text-white py-2 px-6 rounded-lg text-sm font-bold">Ververs</button>
+                        <button onclick="renderDashboard()" class="bg-blue-600 text-white py-2 px-6 rounded-lg text-sm font-bold">Ververs Data</button>
                         <button onclick="location.reload()" class="bg-slate-700 text-white py-2 px-6 rounded-lg text-sm">Terug</button>
                     </div>
                 `;
@@ -271,7 +281,25 @@
         #tunnel-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: black; display: none; z-index: 100; }
         .tunnel-ring { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); border: 2px solid white; border-radius: 50%; opacity: 0; }
         @keyframes fall { 0% { width: 0; height: 0; opacity: 1; } 100% { width: 200vw; height: 200vw; opacity: 0; } }
-        .glitch { font-family: 'Special Elite', cursive; }
+        .glitch { font-family: 'Special Elite', cursive; animation: glitch-anim 1s linear infinite; }
+        @keyframes glitch-anim { 2%, 64% { transform: translate(2px, 0) skew(0deg); } 4%, 60% { transform: translate(-2px, 0) skew(0deg); } 62% { transform: translate(0, 0) skew(5deg); } }
+        
+        /* Trillende animatie */
+        .shake {
+            display: inline-block;
+            animation: shake-anim 0.5s cubic-bezier(.36,.07,.19,.97) infinite;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+
+        @keyframes shake-anim {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-3px, 0, 0); }
+            40%, 60% { transform: translate3d(3px, 0, 0); }
+        }
+
         .btn-choice { transition: transform 0.2s; }
         .btn-choice:active { transform: scale(0.98); }
     </style>
